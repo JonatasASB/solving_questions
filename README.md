@@ -1,139 +1,89 @@
 # Resolução de Questões
 
 Site para treinar lógica de programação resolvendo questões de JavaScript no navegador.
-100 questões em quatro níveis, correção automática, dicas e sistema de pontos.
 
-## Como rodar
+---
 
-```
-node servidor/servidor.js
-```
+## Funcionalidades
 
-E abra <http://localhost:3000>. Não precisa de `npm install`: o servidor usa apenas
-módulos que já vêm no Node.
+### Questões e correção
 
-> **O duplo clique no `index.html` não funciona mais.** A correção das questões passou a
-> acontecer no servidor, então ele precisa estar rodando. Abrir o arquivo direto mostra
-> uma tela explicando isso. Foi uma troca consciente: é o que torna a pontuação confiável
-> e mantém o gabarito fora do alcance de quem abre o DevTools.
-
-Dá para usar **sem conta** — a pontuação fica só naquele navegador — ou **criar uma conta**
-com e-mail e senha, e aí ela fica guardada no servidor.
-
-## Estrutura
-
-```
-solving_questions/
-├── index.html              tela das questões
-├── login.html              entrar / criar conta
-├── assets/
-│   ├── styles.css
-│   ├── images/
-│   │   ├── favicon.svg
-│   │   ├── avatar-homem.svg
-│   │   └── avatar-mulher.svg
-│   └── js/
-│       ├── catalogo.js     busca as questões no servidor
-│       ├── corrector.js    envia a resposta para correção
-│       ├── script.js       liga a interface às regras
-│       ├── editor.js       CodeMirror, com reserva em textarea
-│       ├── storage.js      progresso no navegador
-│       ├── idioma.js       textos em português e inglês
-│       ├── perfil.js       campos do perfil (cadastro e configurações)
-│       ├── auth.js         cliente da API de contas
-│       └── login.js        tela de login
-├── servidor/
-│   ├── servidor.js         HTTP: arquivos + API
-│   ├── questoes.js         catálogo e cálculo de pontos
-│   ├── questoes/           facil · medio · dificil · deus (25 cada)
-│   ├── executor.js         abre o processo isolado e aplica o limite de tempo
-│   ├── sandbox.js          onde o código do usuário roda
-│   ├── auth.js             senha (scrypt) e token (HMAC)
-│   ├── perfil.js           validação dos dados do perfil
-│   ├── banco.js            leitura e escrita dos usuários
-│   └── dados/              criado na primeira execução — NÃO versionar
-└── docs/
-    ├── dump.md             ideia original
-    └── PRD.md              requisitos
-```
-
-## API
-
-| Rota | O que faz |
+| | |
 |---|---|
-| `GET /api/questoes` | catálogo das questões — **sem** testes, dica ou solução |
-| `POST /api/corrigir` | roda a resposta, decide o acerto e libera dica/solução na hora certa |
-| `POST /api/cadastrar` | cria conta com e-mail e senha, devolve token |
-| `POST /api/entrar` | autentica e devolve token |
-| `GET /api/progresso` | lê o progresso da conta |
-| `GET /api/perfil` | lê o perfil da conta |
-| `PUT /api/perfil` | altera o perfil |
+| **100 questões** | divididas em quatro níveis: Fácil, Médio, Difícil e Nível Deus |
+| **Editor de código** | CodeMirror com destaque de sintaxe, e `textarea` como reserva se ele não carregar |
+| **Correção automática** | a resposta roda de verdade contra os testes da questão e devolve acerto ou erro |
+| **Sem entregar a resposta** | o erro nunca mostra o gabarito — o catálogo enviado ao navegador não contém testes, dica nem solução |
+| **Limite de 2 segundos** | laço infinito é interrompido com aviso, em vez de travar a página |
+| **Pular questão** | não pontua, não penaliza e devolve a questão ao fim da fila |
 
-Repare no que **não** existe: uma rota para gravar pontuação. Ela era a porta pela qual
-dava para enviar qualquer número. Hoje o progresso da conta só muda como consequência de
-uma resposta correta verificada em `/api/corrigir`.
+### Ajuda progressiva
 
-## Conta e perfil
+A ajuda aparece conforme o usuário tenta, nunca antes:
 
-Ao criar a conta, além de e-mail e senha, o usuário configura:
+- **5 erros** na mesma questão → libera a **dica**
+- **10 erros** → libera a **solução comentada**
 
-| Campo | Observações |
-|---|---|
-| Nome completo | de 2 a 80 caracteres |
-| Nome de usuário | 3 a 20 caracteres, único, é o que aparece no topo da tela |
-| Linguagem que quer treinar | qualquer uma da lista; as sem questões vêm marcadas "(em breve)" |
-| Idioma do site | português ou inglês |
-| Ano de nascimento | de 1900 até o ano atual |
-| Sexo | homem ou mulher — define o avatar do header |
+### Pontuação e progresso
 
-O botão **⚙** no header abre as configurações, com exatamente os mesmos campos.
-A definição deles vive em `assets/js/perfil.js` e é usada nas duas telas, para não
-divergirem.
+- Cada nível vale pontos diferentes: **Fácil 3 · Médio 5 · Difícil 7 · Deus 10**
+- **Barra de progresso** que mede os acertos dentro do nível atual e muda de cor conforme avança — vermelho no começo, verde no fim
+- Cada nível guarda o próprio progresso, então **trocar de nível não zera nada**
+- Contador de pontos no header
 
-**Contas criadas antes do perfil existir** continuam funcionando: ao entrar, a janela de
-configurações abre sozinha, explica o motivo e não deixa sair sem preencher.
+### Contas
 
-## Idioma
+- **Modo visitante** — dá para resolver tudo sem criar conta; a pontuação fica só naquele navegador
+- **Conta com e-mail e senha** — o progresso fica guardado no servidor e acompanha o usuário entre navegadores
+- **Perfil** com nome completo, nome de usuário, linguagem que quer treinar, idioma do site, ano de nascimento e sexo
+- Botão **⚙** no header abre as configurações com os mesmos campos do cadastro
 
-A **interface** existe em português e inglês, e troca na hora — pelo seletor da tela de
-login ou pelo campo "Idioma do site" nas configurações.
+### Aparência e idioma
 
-> **O conteúdo das 100 questões continua só em português.** Enunciado, parâmetros, dica e
-> explicação não foram traduzidos: é um trabalho de outra ordem de grandeza, e preferi
-> entregar a interface completa a entregar as duas coisas pela metade. O formato das
-> questões suporta a tradução — cada campo de texto viraria `{ pt, en }`, como já é o
-> caso do nome dos níveis em `servidor/questoes.js`.
+- **Tema claro e escuro**, alternado pelo botão ☾ / ☀ no header — o editor de código acompanha a troca
+- **Interface em português e inglês**, com troca imediata pelo seletor do login ou pelas configurações
+- **Avatar** no header conforme o sexo escolhido no perfil
+- Layout adaptado para celular
 
-## Como o código do usuário roda com segurança
+> O **conteúdo das questões** continua só em português. Enunciado, parâmetros, dica e explicação não foram traduzidos — o formato suporta a tradução, cada campo de texto viraria `{ pt, en }`, como já acontece com o nome dos níveis.
 
-Executar código de terceiros é a parte perigosa deste projeto. As camadas, da mais forte
-para a mais fraca:
+---
 
-1. **Processo separado** — cada correção abre um processo próprio, que o servidor mata se
-   passar de 2 segundos. Um laço infinito derruba só o filho.
-2. **Modelo de permissões do Node** (`--permission`) — o processo não lê arquivos, não
-   abre subprocessos e não alcança `process.binding`, que é o caminho clássico de fuga.
-3. **`new Function`** — `require` não existe nesse escopo, então não há como carregar
-   módulos.
-4. **`fetch` substituído** pelo mock da questão, o que fecha a saída de rede.
+## Dicas de UI/UX
 
-Ao subir, o servidor confere se o `--permission` funcionou e avisa no terminal se não.
+### Use os tokens, não valores soltos
 
-Testado contra: leitura de arquivo, `require`, cadeia de `constructor`, `process.exit` e
-requisição de rede — todos bloqueados, e o servidor continua de pé depois.
+O CSS define tudo em variáveis no `:root` de `assets/styles.css`. Ao criar um componente novo, puxe de lá em vez de escrever o valor na mão — é o que mantém o site coerente e faz o tema escuro funcionar de graça.
 
-## Sobre as senhas
+```css
+--raio: 10px;          /* cantos de caixas e botões   */
+--raio-pilula: 999px;  /* botões de nível e etiquetas */
+--transicao: 160ms ease;
+--fonte / --fonte-codigo
+```
 
-Senha nunca é guardada. O que vai para o disco é o resultado do `scrypt` com um sal
-aleatório por usuário. A comparação usa `timingSafeEqual`, e o login responde a mesma
-mensagem para e-mail inexistente e senha errada, para não revelar quais e-mails têm conta.
+As cores (`--fundo`, `--superficie`, `--texto`, `--destaque`, `--erro`…) são **redefinidas** em `html[data-tema="escuro"]`. Toda cor nova precisa das duas versões, senão o componente quebra em um dos temas.
 
-`servidor/dados/` guarda os hashes e o segredo que assina os tokens. Já está no
-`.gitignore` — **não versione essa pasta**.
+### Escreva o tema escuro junto, não depois
 
-## O que ainda falta para colocar na internet
+O tema é trocado por um atributo em `<html>`, então basta acrescentar a cor nos dois blocos ao mesmo tempo. Deixar para "ajustar o dark mode depois" é o que gera texto ilegível sobre fundo preto.
 
-- HTTPS.
-- Um banco de dados no lugar do arquivo JSON.
-- Limite de requisições em `/api/corrigir` (hoje há só a fila de 4 correções simultâneas).
-- Rodar o sandbox em contêiner, não só em processo separado.
+### Respeite os dois pontos de quebra
+
+O layout já quebra em **820px** (celular e tablet) e **400px** (telas estreitas). Use esses mesmos valores em vez de inventar um terceiro — três pontos de quebra desalinhados fazem o layout pular em larguras intermediárias.
+
+### Mantenha a acessibilidade que já existe
+
+A interface atualiza `aria-valuenow` na barra de progresso, `aria-expanded` nos menus e `aria-selected` nos níveis. Componente novo com o mesmo papel precisa do mesmo atributo — é barato fazer junto e caro voltar depois.
+
+### Poucas informações na tela
+
+A ideia original do projeto é uma interface enxuta: sem frases desnecessárias, sem explicar o óbvio. Informação secundária — como a etiqueta de nível ao lado da pergunta — fica pequena e discreta de propósito. Antes de acrescentar um texto, verifique se ele muda alguma decisão de quem está resolvendo a questão.
+
+### Feedback imediato em toda ação
+
+Botão clicado, resposta enviada, tema trocado: tudo responde na hora, com a transição de 160ms. A correção é a única operação que pode demorar — ela precisa de estado de carregando, senão o usuário clica duas vezes.
+
+### Erro orienta, não entrega
+
+Quando a resposta está errada, a mensagem diz **o que** falhou sem revelar a solução. É a regra central do projeto: a dica só aparece no 5º erro e a solução no 10º. Mensagem de erro nova deve seguir a mesma linha — dar um norte, não o caminho pronto.
