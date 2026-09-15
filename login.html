@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-tema="claro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="titulo_login">Entrar — Resolução de Questões</title>
+  <link rel="icon" type="image/svg+xml" href="assets/images/favicon.svg">
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+
+  <header class="cabecalho">
+    <div class="cabecalho__lado">
+      <span class="logo" aria-hidden="true">&lt;/&gt;</span>
+    </div>
+    <h1 class="cabecalho__titulo" data-i18n="titulo_site">Resolução de Questões</h1>
+    <div class="cabecalho__lado cabecalho__lado--fim">
+      <select class="seletor-idioma" id="seletor-idioma" aria-label="Idioma">
+        <option value="pt">PT</option>
+        <option value="en">EN</option>
+      </select>
+      <button type="button" class="botao botao--icone" id="btn-tema"
+              data-i18n-attr="aria-label:alternar_tema">☾</button>
+    </div>
+  </header>
+
+  <main class="conteudo conteudo--centralizado">
+    <div class="cartao">
+
+      <div class="abas" role="tablist">
+        <button type="button" class="aba aba--ativa" id="aba-entrar" role="tab"
+                aria-selected="true" data-i18n="entrar">Entrar</button>
+        <button type="button" class="aba" id="aba-cadastrar" role="tab"
+                aria-selected="false" data-i18n="criar_conta">Criar conta</button>
+      </div>
+
+      <p class="cartao__texto" id="explicacao" data-i18n="explica_entrar">
+        Entre para que sua pontuação fique guardada na sua conta.
+      </p>
+
+      <form class="formulario" id="formulario" novalidate>
+        <label class="campo">
+          <span class="campo__rotulo" data-i18n="email">E-mail</span>
+          <input type="email" id="email" name="email" autocomplete="email" required
+                 data-i18n-attr="placeholder:email_exemplo">
+        </label>
+
+        <label class="campo">
+          <span class="campo__rotulo" data-i18n="senha">Senha</span>
+          <input type="password" id="senha" name="senha" required
+                 autocomplete="current-password"
+                 data-i18n-attr="placeholder:senha_exemplo">
+        </label>
+
+        <p class="campo__ajuda" id="ajuda-senha" data-i18n="ajuda_senha" hidden>
+          A senha precisa ter pelo menos 8 caracteres.
+        </p>
+
+        <!-- Só aparece ao criar conta -->
+        <div id="bloco-perfil" hidden>
+          <h2 class="secao__titulo" data-i18n="seu_perfil">Seu perfil</h2>
+          <div class="campos" id="campos-perfil"></div>
+        </div>
+
+        <p class="aviso aviso--erro" id="mensagem" hidden></p>
+
+        <button type="submit" class="botao botao--principal botao--largo" id="btn-enviar"
+                data-i18n="entrar">Entrar</button>
+      </form>
+
+      <p class="cartao__rodape">
+        <a href="index.html" id="link-sem-conta" data-i18n="sem_conta">Continuar sem conta</a>
+        <span data-i18n="sem_conta_nota">— o progresso fica só neste navegador.</span>
+      </p>
+
+      <p class="aviso" id="aviso-sem-servidor" data-i18n="aviso_sem_servidor_login" data-i18n-html hidden></p>
+    </div>
+  </main>
+
+  <script src="assets/js/idioma.js"></script>
+  <script src="assets/js/catalogo.js"></script>
+  <script src="assets/js/perfil.js"></script>
+  <script src="assets/js/auth.js"></script>
+  <script src="assets/js/login.js"></script>
+</body>
+</html>
