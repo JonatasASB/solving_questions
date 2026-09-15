@@ -69,11 +69,17 @@ function limparFalhas(chave) {
 
 function responderJson(res, status, corpo) {
   const texto = JSON.stringify(corpo);
-  res.writeHead(status, {
+  const cabecalhos = {
     'Content-Type': 'application/json; charset=utf-8',
     'Content-Length': Buffer.byteLength(texto),
     'Cache-Control': 'no-store'
-  });
+  };
+
+  /* Token renovado volta em cabeçalho, não no corpo: assim toda rota
+     autenticada renova sozinha, sem cada uma ter de lembrar de incluir. */
+  if (res.tokenRenovado) cabecalhos['X-Token-Renovado'] = res.tokenRenovado;
+
+  res.writeHead(status, cabecalhos);
   res.end(texto);
 }
 
@@ -106,10 +112,16 @@ function lerCorpo(req) {
   });
 }
 
-function usuarioDaRequisicao(req) {
+/* Além de identificar quem pediu, reinicia a janela de inatividade: o token
+   devolvido vale por mais 3 dias a partir de agora. Sem `res` (uso interno)
+   só identifica, sem renovar. */
+function usuarioDaRequisicao(req, res) {
   const cabecalho = req.headers['authorization'] || '';
   if (!cabecalho.startsWith('Bearer ')) return null;
-  return auth.lerToken(cabecalho.slice(7));
+
+  const dados = auth.lerToken(cabecalho.slice(7));
+  if (dados && res) res.tokenRenovado = auth.renovarToken(dados);
+  return dados;
 }
 
 /* -------------------------------------------------------------------- API */
@@ -154,7 +166,7 @@ function idsDeLinguagem() {
 }
 
 function lerPerfil(req, res) {
-  const dono = usuarioDaRequisicao(req);
+  const dono = usuarioDaRequisicao(req, res);
   if (!dono) return responderErro(res, 401, 'sem_sessao', 'Faça login novamente.');
 
   const usuario = banco.buscarPorId(dono.id);
@@ -165,7 +177,7 @@ function lerPerfil(req, res) {
 }
 
 async function gravarPerfil(req, res) {
-  const dono = usuarioDaRequisicao(req);
+  const dono = usuarioDaRequisicao(req, res);
   if (!dono) return responderErro(res, 401, 'sem_sessao', 'Faça login novamente.');
 
   const corpo = await lerCorpo(req);
@@ -218,8 +230,8 @@ async function entrar(req, res) {
 /* Quem está pedindo. Conta logada tem id do banco; visitante usa o
    identificador que o próprio navegador gera. Para visitante isso serve só
    para contar tentativas — a pontuação dele não entra em conta nenhuma. */
-function identidade(req) {
-  const dono = usuarioDaRequisicao(req);
+function identidade(req, res) {
+  const dono = usuarioDaRequisicao(req, res);
   if (dono) return { tipo: 'usuario', id: dono.id };
 
   const sessao = String(req.headers['x-sessao'] || '').slice(0, 64);
@@ -259,7 +271,7 @@ async function corrigirQuestao(req, res) {
   if (!codigo.trim()) return responderJson(res, 400, { erro: 'Escreva sua resposta antes de enviar.' });
   if (codigo.length > 20000) return responderJson(res, 400, { erro: 'Código longo demais.' });
 
-  const quem = identidade(req);
+  const quem = identidade(req, res);
   const chave = quem.id + '|' + questao.id;
 
   const resultado = await executor.corrigir(questao, codigo);
@@ -308,7 +320,7 @@ async function corrigirQuestao(req, res) {
 }
 
 function lerProgresso(req, res) {
-  const dono = usuarioDaRequisicao(req);
+  const dono = usuarioDaRequisicao(req, res);
   if (!dono) return responderJson(res, 401, { erro: 'Faça login novamente.' });
 
   const usuario = banco.buscarPorId(dono.id);

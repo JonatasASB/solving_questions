@@ -212,6 +212,12 @@
     }
 
     atualizarModo();
+
+    /* Chegou aqui por sessão vencida: diz o motivo antes de pedir a senha. */
+    if (new URLSearchParams(location.search).get('expirou') === '1') {
+      mostrarErro(I18n.t('sessao_expirou'));
+    }
+
     el.email.focus();
   }
 

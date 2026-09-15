@@ -7,7 +7,11 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const HORAS_DE_VALIDADE = 24 * 7;   // uma semana
+/* Janela de inatividade: o token vale 3 dias contados a partir do último uso,
+   não da data do login. Todo pedido autenticado devolve um token novo com o
+   prazo reiniciado (ver renovarToken), então quem usa o site continua dentro;
+   quem some por 3 dias precisa informar e-mail e senha de novo. */
+const HORAS_DE_INATIVIDADE = 24 * 3;
 
 /* O segredo assina os tokens. É gerado uma vez e guardado em disco: se ele
    mudar, todos os tokens emitidos deixam de valer e os usuários precisam
@@ -83,10 +87,17 @@ function gerarToken(usuario) {
   const dados = {
     id: usuario.id,
     email: usuario.email,
-    expiraEm: Date.now() + HORAS_DE_VALIDADE * 60 * 60 * 1000
+    expiraEm: Date.now() + HORAS_DE_INATIVIDADE * 60 * 60 * 1000
   };
   const corpo = base64url(JSON.stringify(dados));
   return corpo + '.' + assinar(corpo);
+}
+
+/* Reinicia a contagem dos 3 dias a partir de agora. Recebe o conteúdo de um
+   token já validado por lerToken, não o registro do banco: renovar não é hora
+   de ir ao disco, e quem o token diz ser a assinatura já garantiu. */
+function renovarToken(dados) {
+  return gerarToken({ id: dados.id, email: dados.email });
 }
 
 function lerToken(token) {
@@ -135,7 +146,9 @@ module.exports = {
   guardarSenha: guardarSenha,
   conferirSenha: conferirSenha,
   gerarToken: gerarToken,
+  renovarToken: renovarToken,
   lerToken: lerToken,
+  HORAS_DE_INATIVIDADE: HORAS_DE_INATIVIDADE,
   emailValido: emailValido,
   problemaNaSenha: problemaNaSenha
 };

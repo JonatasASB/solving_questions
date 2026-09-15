@@ -831,6 +831,14 @@ const App = (function () {
   async function iniciar() {
     selecionarElementos();
 
+    /* Quem nunca teve conta segue como visitante, sem interrupção. Quem tinha
+       sessão e passou 3 dias fora vai para o login com a explicação — ficar
+       em silêncio faria o progresso da conta parecer perdido. */
+    if (Auth.apiDisponivel() && Auth.sessaoExpirou()) {
+      location.href = 'login.html?expirou=1';
+      return;
+    }
+
     /* O idioma precisa valer antes de qualquer texto aparecer, inclusive o da
        tela de erro logo abaixo. */
     I18n.definir(estado.idioma || 'pt');

@@ -5,6 +5,10 @@
 
 const Auth = (function () {
   const CHAVE_TOKEN = 'solving_questions_token';
+  /* Marca que existia uma sessão e ela venceu. É o que separa "nunca entrou"
+     (visitante, segue livre) de "entrou e sumiu por 3 dias" (precisa informar
+     e-mail e senha de novo). */
+  const CHAVE_EXPIROU = 'solving_questions_sessao_expirou';
 
   /* Sem servidor não há API. É o que permite abrir o index.html com duplo
      clique e continuar treinando, só que sem conta. */
@@ -36,6 +40,25 @@ const Auth = (function () {
     }
   }
 
+  function marcarExpirada() {
+    try {
+      localStorage.setItem(CHAVE_EXPIROU, '1');
+    } catch (erro) {
+      // sem localStorage não há o que lembrar
+    }
+  }
+
+  /* Lê e apaga: a tela pergunta uma vez, mostra o aviso e não repete. */
+  function sessaoExpirou() {
+    try {
+      const marca = localStorage.getItem(CHAVE_EXPIROU) === '1';
+      if (marca) localStorage.removeItem(CHAVE_EXPIROU);
+      return marca;
+    } catch (erro) {
+      return false;
+    }
+  }
+
   /* O conteúdo do token é legível (não é segredo) — dá para saber quem está
      logado e até quando vale sem perguntar ao servidor. Quem valida de
      verdade é o servidor, pela assinatura; isto aqui é só conveniência. */
@@ -50,6 +73,7 @@ const Auth = (function () {
       const normal = corpo.replace(/-/g, '+').replace(/_/g, '/');
       const dados = JSON.parse(decodeURIComponent(escape(atob(normal))));
       if (!dados.expiraEm || Date.now() > dados.expiraEm) {
+        marcarExpirada();
         limparToken();
         return null;
       }
@@ -83,6 +107,13 @@ const Auth = (function () {
     }
 
     const resposta = await fetch(caminho, opcoes);
+
+    /* O servidor reinicia a janela de 3 dias a cada pedido autenticado e
+       devolve o token novo neste cabeçalho. Guardar aqui, num ponto só,
+       faz todas as rotas renovarem sem saber disso. */
+    const renovado = resposta.headers.get('X-Token-Renovado');
+    if (renovado && atual) guardarToken(renovado);
+
     let dados = {};
     try {
       dados = await resposta.json();
@@ -91,7 +122,10 @@ const Auth = (function () {
     }
 
     if (!resposta.ok) {
-      if (resposta.status === 401) limparToken();
+      if (resposta.status === 401) {
+        if (atual) marcarExpirada();
+        limparToken();
+      }
       /* O código viaja junto: a tela escolhe a frase no idioma do usuário,
          e só cai na mensagem do servidor se não conhecer o código. */
       const falha = new Error(dados.erro || 'Não consegui falar com o servidor.');
@@ -146,6 +180,7 @@ const Auth = (function () {
   return {
     apiDisponivel: apiDisponivel,
     logado: logado,
+    sessaoExpirou: sessaoExpirou,
     emailAtual: emailAtual,
     cadastrar: cadastrar,
     entrar: entrar,
