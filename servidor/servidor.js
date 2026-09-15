@@ -20,7 +20,9 @@ const questoes = require('./questoes');
 const executor = require('./executor');
 const perfil = require('./perfil');
 
-const PORTA = process.env.PORTA || 3000;
+/* PORT e o nome que os servicos de hospedagem injetam; PORTA fica por
+   compatibilidade com quem ja rodava assim na propria maquina. */
+const PORTA = process.env.PORT || process.env.PORTA || 3000;
 const RAIZ = path.join(__dirname, '..');
 
 const TIPOS = {
@@ -403,7 +405,10 @@ const servidor = http.createServer(function (req, res) {
 });
 
 servidor.listen(PORTA, async function () {
-  console.log('Resolução de Questões rodando em http://localhost:' + PORTA);
+  const local = !process.env.PORT;
+  console.log(local
+    ? 'Resolução de Questões rodando em http://localhost:' + PORTA
+    : 'Resolução de Questões no ar na porta ' + PORTA);
 
   const isolamento = await executor.conferirIsolamento();
   if (isolamento.isolado) {

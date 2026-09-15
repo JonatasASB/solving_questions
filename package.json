@@ -1,0 +1,14 @@
+{
+  "name": "solving-questions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site para treinar logica de programacao resolvendo questoes de JavaScript no navegador.",
+  "main": "servidor/servidor.js",
+  "scripts": {
+    "start": "node servidor/servidor.js"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "MIT"
+}

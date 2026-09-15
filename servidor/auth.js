@@ -13,10 +13,35 @@ const path = require('path');
    quem some por 3 dias precisa informar e-mail e senha de novo. */
 const HORAS_DE_INATIVIDADE = 24 * 3;
 
-/* O segredo assina os tokens. É gerado uma vez e guardado em disco: se ele
-   mudar, todos os tokens emitidos deixam de valer e os usuários precisam
-   entrar de novo — o que é o comportamento correto, não uma falha. */
+const TAMANHO_MINIMO_DO_SEGREDO = 32;
+
+/* O segredo assina os tokens. Se ele mudar, todos os tokens emitidos deixam
+   de valer e os usuários precisam entrar de novo — o que é o comportamento
+   correto, não uma falha.
+
+   Vem de duas origens, nesta ordem:
+
+   1. SEGREDO_TOKEN no ambiente — é o caminho para hospedagem, onde o disco é
+      apagado a cada deploy. Sem isso, todo deploy deslogaria todo mundo.
+   2. servidor/dados/segredo.txt — gerado sozinho na primeira execução. É o
+      caminho de quem roda na própria máquina e não precisa configurar nada. */
 function obterSegredo() {
+  const doAmbiente = String(process.env.SEGREDO_TOKEN || '').trim();
+
+  if (doAmbiente) {
+    /* Segredo curto derruba a garantia do HMAC. Falhar ao subir é melhor do
+       que rodar meses com assinatura fraca sem ninguém perceber. */
+    if (doAmbiente.length < TAMANHO_MINIMO_DO_SEGREDO) {
+      throw new Error(
+        'SEGREDO_TOKEN precisa ter pelo menos ' + TAMANHO_MINIMO_DO_SEGREDO +
+        ' caracteres. Gere um com:\n' +
+        '  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'hex\'))"'
+      );
+    }
+
+    return doAmbiente;
+  }
+
   const pasta = path.join(__dirname, 'dados');
   const arquivo = path.join(pasta, 'segredo.txt');
 

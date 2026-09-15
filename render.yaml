@@ -1,0 +1,17 @@
+# Deploy no Render. Opcional: dá para configurar tudo pela interface do site
+# (docs/deploy.md explica), mas com este arquivo o Render lê a configuração
+# pronta em vez de você preencher campo por campo.
+services:
+  - type: web
+    name: solving-questions
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # O Render gera o segredo sozinho e o mantém entre deploys — que é o
+      # ponto: se ele mudar, todos os logins caem.
+      - key: SEGREDO_TOKEN
+        generateValue: true
+      - key: NODE_VERSION
+        value: "22"
