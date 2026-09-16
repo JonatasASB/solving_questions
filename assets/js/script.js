@@ -57,6 +57,7 @@ const App = (function () {
 
     el.btnEnviar = document.getElementById('btn-enviar');
     el.btnPular = document.getElementById('btn-pular');
+    el.btnVoltar = document.getElementById('btn-voltar');
     el.tentativas = document.getElementById('tentativas');
     el.resultado = document.getElementById('resultado');
 
@@ -274,6 +275,17 @@ const App = (function () {
     montarMenus();
     el.grupoNivel.hidden = false;
     montarBotoesNivel(el.botoesNivel);
+  }
+
+  /* Volta para a escolha de linguagem. Não mexe em progresso nem em fila:
+     o nível continua onde estava, e reentrar cai no mesmo ponto. */
+  function voltarParaEscolha() {
+    el.telaResolucao.hidden = true;
+    el.telaEscolha.hidden = false;
+    el.grupoNivel.hidden = false;
+    montarBotoesLinguagem();
+    montarBotoesNivel(el.botoesNivel);
+    window.scrollTo(0, 0);
   }
 
   /* PRD 4.6 — trocar de nível nunca zera o avanço. */
@@ -569,6 +581,7 @@ const App = (function () {
     el.modalFundo.addEventListener('click', fecharConfiguracoes);
     el.btnEnviar.addEventListener('click', enviar);
     el.btnPular.addEventListener('click', pular);
+    el.btnVoltar.addEventListener('click', voltarParaEscolha);
 
     el.btnMenuLinguagem.addEventListener('click', function (evento) {
       evento.stopPropagation();
@@ -836,6 +849,15 @@ const App = (function () {
        em silêncio faria o progresso da conta parecer perdido. */
     if (Auth.apiDisponivel() && Auth.sessaoExpirou()) {
       location.href = 'login.html?expirou=1';
+      return;
+    }
+
+    /* Primeira visita: a tela de entrada vem antes das questões, para quem
+       chega saber que existe conta. Não é um muro — de lá dá para seguir
+       sem conta, e a escolha fica registrada para não perguntar de novo.
+       Aberto do disco (file://) não há login possível, então segue direto. */
+    if (Auth.apiDisponivel() && !Auth.logado() && !Auth.escolheuVisitante()) {
+      location.href = 'login.html';
       return;
     }
 

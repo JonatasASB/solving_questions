@@ -108,6 +108,23 @@ body {
   font-size: 1rem;
 }
 
+/* Voltar para as linguagens. Discreto de proposito: e uma saida, nao a acao
+   principal da tela — quem esta resolvendo deve olhar para o editor. */
+.botao--voltar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.9rem;
+  margin-bottom: 0.9rem;
+  color: var(--texto-suave);
+}
+
+.botao--voltar:hover {
+  color: var(--texto);
+  border-color: var(--destaque-forte);
+}
+
 .botao:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* Linguagens — a cor da marca é aplicada pelo JS a partir de LINGUAGENS.

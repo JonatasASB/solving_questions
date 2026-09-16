@@ -58,6 +58,13 @@
     <!-- Tela de resolução — PRD 3.5 -->
     <section class="resolucao" id="tela-resolucao" hidden>
 
+      <!-- Volta para a escolha de linguagem sem perder o avanço -->
+      <button type="button" class="botao botao--voltar" id="btn-voltar"
+              data-i18n-attr="aria-label:voltar_linguagens,title:voltar_linguagens">
+        <span aria-hidden="true">&#8592;</span>
+        <span data-i18n="linguagens">Linguagens</span>
+      </button>
+
       <div class="progresso" role="progressbar" aria-valuemin="0" aria-valuemax="100"
            aria-valuenow="0" id="progresso">
         <div class="progresso__barra" id="barra"></div>

@@ -19,7 +19,8 @@
     btnEnviar: document.getElementById('btn-enviar'),
     btnTema: document.getElementById('btn-tema'),
     seletorIdioma: document.getElementById('seletor-idioma'),
-    avisoSemServidor: document.getElementById('aviso-sem-servidor')
+    avisoSemServidor: document.getElementById('aviso-sem-servidor'),
+    linkSemConta: document.getElementById('link-sem-conta')
   };
 
   const CHAVE_LOCAL = 'solving_questions_v1';
@@ -187,6 +188,12 @@
     el.abaEntrar.addEventListener('click', function () { trocarModo('entrar'); });
     el.abaCadastrar.addEventListener('click', function () { trocarModo('cadastrar'); });
     el.formulario.addEventListener('submit', enviar);
+
+    /* Sem registrar a escolha, o index mandaria a pessoa de volta para ca
+       no carregamento seguinte, e o link nunca levaria a lugar nenhum. */
+    el.linkSemConta.addEventListener('click', function () {
+      Auth.escolherVisitante();
+    });
     el.email.addEventListener('input', esconderMensagem);
     el.senha.addEventListener('input', esconderMensagem);
 

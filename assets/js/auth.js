@@ -9,6 +9,10 @@ const Auth = (function () {
      (visitante, segue livre) de "entrou e sumiu por 3 dias" (precisa informar
      e-mail e senha de novo). */
   const CHAVE_EXPIROU = 'solving_questions_sessao_expirou';
+  /* Registra que a pessoa viu a tela de entrada e escolheu seguir sem
+     conta. Sem isso ela voltaria para o login a cada carregamento, presa
+     num ciclo de onde a opção de visitante nunca sai. */
+  const CHAVE_VISITANTE = 'solving_questions_visitante';
 
   /* Sem servidor não há API. É o que permite abrir o index.html com duplo
      clique e continuar treinando, só que sem conta. */
@@ -37,6 +41,24 @@ const Auth = (function () {
       localStorage.removeItem(CHAVE_TOKEN);
     } catch (erro) {
       // nada a fazer
+    }
+  }
+
+  function escolherVisitante() {
+    try {
+      localStorage.setItem(CHAVE_VISITANTE, '1');
+    } catch (erro) {
+      // sem localStorage a escolha vale só para esta página
+    }
+  }
+
+  function escolheuVisitante() {
+    try {
+      return localStorage.getItem(CHAVE_VISITANTE) === '1';
+    } catch (erro) {
+      /* Navegador sem armazenamento: melhor deixar entrar do que prender
+         na tela de login alguém que não tem como registrar a escolha. */
+      return true;
     }
   }
 
@@ -175,12 +197,19 @@ const Auth = (function () {
 
   function sair() {
     limparToken();
+    try {
+      localStorage.removeItem(CHAVE_VISITANTE);
+    } catch (erro) {
+      // nada a fazer
+    }
   }
 
   return {
     apiDisponivel: apiDisponivel,
     logado: logado,
     sessaoExpirou: sessaoExpirou,
+    escolherVisitante: escolherVisitante,
+    escolheuVisitante: escolheuVisitante,
     emailAtual: emailAtual,
     cadastrar: cadastrar,
     entrar: entrar,
