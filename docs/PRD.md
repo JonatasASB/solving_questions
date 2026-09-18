@@ -425,6 +425,8 @@ idiomas.
 |---|---|
 | **CodeMirror 6** para o editor | Entrega destaque de sintaxe, numeração de linhas e marcação de erro prontos. Recriar isso à mão daria um editor bem mais pobre que a "IDE" pedida no dump. |
 | **CodeMirror empacotado em `assets/vendor/`**, e não puxado de um CDN | Importar os três pacotes do esm.sh virava 53 pedidos a um servidor de terceiros, e `Promise.all` rejeita no primeiro erro: bastava um falhar para o editor virar textarea — o que, na hospedagem, acontecia na maioria dos carregamentos. Empacotado, é um pedido só, para o mesmo servidor que já entrega o site. |
+| **Resumo do conteúdo no nome do bundle** (`codemirror.<resumo>.min.js`) | É o que autoriza guardá-lo no navegador por um ano: conteúdo diferente gera nome diferente, então o cache nunca serve uma versão velha. Um número de versão à mão não valeria — o bundle junta três pacotes, e bastaria esquecer de trocá-lo uma vez. |
+| **`ETag` e `304` nos arquivos estáticos** | O resto tem nome fixo e precisa ser conferido a cada visita. Com a etiqueta saindo do conteúdo (e não da data, que todo deploy reescreve), conferir custa uma resposta vazia em vez do arquivo inteiro. |
 | **Web Worker** para executar a resposta | Isola o código do usuário e permite timeout contra laço infinito. |
 | **Sem etapa de build para rodar** | `index.html` abre direto no navegador. O bundle do editor é gerado uma vez (`npm run build:editor`) e versionado, então nem quem clona nem a hospedagem precisam construir nada. |
 | **`addEventListener`**, sem evento inline no HTML | Padrão já adotado nos seus projetos anteriores. |
@@ -441,7 +443,7 @@ idiomas.
 | **Avatares em SVG com figura branca sobre círculo neutro** | Mesma cor para os dois, para a distinção vir da forma e não de cor estereotipada. |
 
 CodeMirror é a **única** dependência externa do projeto, e mesmo ela não é
-instalada para rodar: o que o navegador recebe é o `assets/vendor/codemirror.min.js`
+instalada para rodar: o que o navegador recebe é o bundle de `assets/vendor/`
 já pronto. As dependências em `package.json` são todas de desenvolvimento, usadas
 só para regerar esse arquivo.
 
@@ -460,7 +462,8 @@ solving_questions/
 │   ├── images/favicon.svg
 │   ├── vendor/
 │   │   ├── entrada.js         fonte do bundle (não vai ao navegador)
-│   │   └── codemirror.min.js  gerado por npm run build:editor
+│   │   ├── build.js           gera o bundle e acerta o nome no index.html
+│   │   └── codemirror.<resumo>.min.js   gerado por npm run build:editor
 │   └── js/
 │       ├── catalogo.js     busca as questões no servidor
 │       ├── corrector.js    envia a resposta para correção

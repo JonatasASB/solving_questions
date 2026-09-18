@@ -2,7 +2,8 @@
 
    Este arquivo não vai para o navegador: ele é a entrada do esbuild, que
    segue estes três imports, puxa o grafo inteiro de dependências do
-   CodeMirror e escreve tudo num módulo só.
+   CodeMirror e escreve tudo num módulo só. Quem conduz isso é o build.js
+   ao lado, que ainda dá ao resultado um nome com resumo do conteúdo.
 
    Para regerar o bundle depois de mudar uma versão no package.json:
 

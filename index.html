@@ -139,8 +139,11 @@
   <script src="assets/js/editor.js"></script>
   <script src="assets/js/script.js"></script>
 
-  <!-- O CodeMirror vem de assets/vendor/codemirror.min.js: um arquivo só,
-       servido pelo mesmo servidor que entrega o resto do site.
+  <!-- O CodeMirror vem de assets/vendor/: um arquivo só, servido pelo mesmo
+       servidor que entrega o resto do site. O trecho no meio do nome é um
+       resumo do conteúdo, escrito por npm run build:editor — é ele que deixa
+       o arquivo ser guardado no cache por um ano sem risco de envelhecer.
+       Não edite este nome à mão: o build o reescreve.
 
        Antes eram três imports do esm.sh, que se desdobravam em 53 pedidos a um
        CDN de terceiros. Como Promise.all rejeita no primeiro erro, bastava um
@@ -167,7 +170,7 @@
       });
     }
 
-    import('./assets/vendor/codemirror.min.js')
+    import('./assets/vendor/codemirror.32c2d53fc9.min.js')
       .catch(pelaRede)
       .then(function (modulos) {
         Editor.ativarCodeMirror({

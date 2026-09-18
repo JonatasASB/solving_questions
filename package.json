@@ -6,7 +6,7 @@
   "main": "servidor/servidor.js",
   "scripts": {
     "start": "node servidor/servidor.js",
-    "build:editor": "esbuild assets/vendor/entrada.js --bundle --format=esm --minify --target=es2020 --outfile=assets/vendor/codemirror.min.js"
+    "build:editor": "node assets/vendor/build.js"
   },
   "engines": {
     "node": ">=20.0.0"

@@ -13,6 +13,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const banco = require('./banco');
 const auth = require('./auth');
@@ -342,6 +343,36 @@ function caminhoPermitido(relativo) {
   return relativo.startsWith('assets/');
 }
 
+/* Quanto tempo o navegador pode guardar cada arquivo.
+
+   O bundle do editor traz um resumo do conteúdo no nome, escrito por
+   npm run build:editor. Conteúdo diferente é nome diferente, então o que está
+   guardado nunca fica velho: dá para mandar o navegador ficar com ele um ano e
+   nem perguntar de novo. São 492 KB que deixam de ser baixados a cada visita —
+   o arquivo que mais pesa aqui, ainda mais no plano gratuito.
+
+   Quem autoriza o cache longo é o resumo, não a pasta: o build.js e o
+   entrada.js vivem em assets/vendor/ com nome fixo, e guardá-los por um ano
+   deixaria uma versão velha presa no navegador de quem os tivesse aberto.
+
+   O resto tem nome fixo, então precisa ser conferido a cada visita. É o que
+   'no-cache' pede: perguntar antes de usar. Com o ETag logo abaixo, essa
+   pergunta costuma terminar em 304 e nada trafega. */
+const COM_RESUMO_NO_NOME = /^assets\/vendor\/codemirror\.[a-f0-9]+\.min\.js$/;
+
+function cacheDoArquivo(relativo) {
+  if (COM_RESUMO_NO_NOME.test(relativo)) return 'public, max-age=31536000, immutable';
+  return 'no-cache';
+}
+
+/* Etiqueta do conteúdo: o navegador devolve a dele em If-None-Match e, se
+   bater, respondemos 304 sem corpo. Sai do conteúdo e não da data do arquivo
+   porque todo deploy reescreve as datas — e aí nenhum cache sobreviveria a uma
+   atualização que não mudou nada. */
+function etiqueta(dados) {
+  return '"' + crypto.createHash('sha1').update(dados).digest('base64') + '"';
+}
+
 function servirArquivo(req, res) {
   const caminhoUrl = decodeURIComponent((req.url || '/').split('?')[0]);
   const relativo = caminhoUrl === '/' ? 'index.html' : caminhoUrl.replace(/^\/+/, '');
@@ -363,7 +394,21 @@ function servirArquivo(req, res) {
       res.end('Não encontrado');
       return;
     }
-    res.writeHead(200, { 'Content-Type': TIPOS[path.extname(arquivo)] || 'application/octet-stream' });
+
+    const cache = cacheDoArquivo(normalizado);
+    const etag = etiqueta(dados);
+
+    if (req.headers['if-none-match'] === etag) {
+      res.writeHead(304, { 'ETag': etag, 'Cache-Control': cache });
+      res.end();
+      return;
+    }
+
+    res.writeHead(200, {
+      'Content-Type': TIPOS[path.extname(arquivo)] || 'application/octet-stream',
+      'Cache-Control': cache,
+      'ETag': etag
+    });
     res.end(dados);
   });
 }
