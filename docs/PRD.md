@@ -423,9 +423,10 @@ idiomas.
 
 | Decisão | Motivo |
 |---|---|
-| **CodeMirror 6 via CDN** para o editor | Entrega destaque de sintaxe, numeração de linhas e marcação de erro prontos. Recriar isso à mão daria um editor bem mais pobre que a "IDE" pedida no dump. |
+| **CodeMirror 6** para o editor | Entrega destaque de sintaxe, numeração de linhas e marcação de erro prontos. Recriar isso à mão daria um editor bem mais pobre que a "IDE" pedida no dump. |
+| **CodeMirror empacotado em `assets/vendor/`**, e não puxado de um CDN | Importar os três pacotes do esm.sh virava 53 pedidos a um servidor de terceiros, e `Promise.all` rejeita no primeiro erro: bastava um falhar para o editor virar textarea — o que, na hospedagem, acontecia na maioria dos carregamentos. Empacotado, é um pedido só, para o mesmo servidor que já entrega o site. |
 | **Web Worker** para executar a resposta | Isola o código do usuário e permite timeout contra laço infinito. |
-| **Sem etapa de build** | `index.html` abre direto no navegador, como nos outros projetos. |
+| **Sem etapa de build para rodar** | `index.html` abre direto no navegador. O bundle do editor é gerado uma vez (`npm run build:editor`) e versionado, então nem quem clona nem a hospedagem precisam construir nada. |
 | **`addEventListener`**, sem evento inline no HTML | Padrão já adotado nos seus projetos anteriores. |
 | **Servidor em Node puro**, sem dependências | Usa só `http`, `crypto` e `fs`. Dispensa `npm install`, que é onde projetos de estudo costumam travar no Windows. |
 | **`crypto.scrypt`** para a senha | Função de derivação feita para senha: lenta de propósito e com sal por usuário. |
@@ -439,7 +440,10 @@ idiomas.
 | **Erros da API como código**, não como frase | A interface é bilíngue: quem escolhe o idioma da mensagem é a tela, não o servidor. |
 | **Avatares em SVG com figura branca sobre círculo neutro** | Mesma cor para os dois, para a distinção vir da forma e não de cor estereotipada. |
 
-CodeMirror é a **única** dependência externa do projeto.
+CodeMirror é a **única** dependência externa do projeto, e mesmo ela não é
+instalada para rodar: o que o navegador recebe é o `assets/vendor/codemirror.min.js`
+já pronto. As dependências em `package.json` são todas de desenvolvimento, usadas
+só para regerar esse arquivo.
 
 ---
 
@@ -454,6 +458,9 @@ solving_questions/
 ├── assets/
 │   ├── styles.css
 │   ├── images/favicon.svg
+│   ├── vendor/
+│   │   ├── entrada.js         fonte do bundle (não vai ao navegador)
+│   │   └── codemirror.min.js  gerado por npm run build:editor
 │   └── js/
 │       ├── catalogo.js     busca as questões no servidor
 │       ├── corrector.js    envia a resposta para correção

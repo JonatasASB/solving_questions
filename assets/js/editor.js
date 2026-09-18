@@ -1,8 +1,9 @@
 /* Área de resposta — PRD 3.5e e 5.
 
-   Usa CodeMirror 6, carregado do CDN pelo módulo no fim do index.html. Enquanto
-   ele não chega — ou se não chegar, por falta de internet — a textarea do HTML
-   continua valendo como editor. A correção funciona nos dois casos. */
+   Usa CodeMirror 6, carregado pelo módulo no fim do index.html a partir de
+   assets/vendor/codemirror.min.js. Enquanto ele não chega — ou se não chegar —
+   a textarea do HTML continua valendo como editor. A correção funciona nos
+   dois casos. */
 
 const Editor = (function () {
   let caixa = null;
@@ -19,6 +20,10 @@ const Editor = (function () {
     area = elementoArea;
     valorPendente = area.value;
     area.addEventListener('input', notificarMudanca);
+
+    /* O CodeMirror pode ter chegado antes desta chamada; se chegou, ficou
+       guardado esperando a textarea existir. Este é o momento. */
+    if (modulos) ativarCodeMirror(modulos);
   }
 
   /* Quem escuta é a interface: hoje ela usa isso para apagar o vermelho assim
@@ -57,9 +62,15 @@ const Editor = (function () {
     });
   }
 
-  /* Chamado pelo módulo do index.html quando o CodeMirror termina de carregar. */
+  /* Chamado pelo módulo do index.html quando o CodeMirror termina de carregar.
+
+     Pode acontecer antes de iniciar(): o bundle é local e chega em poucos
+     milissegundos, enquanto iniciar() espera o catálogo do servidor. Quando é
+     esse o caso, guardar os módulos basta — iniciar() chama esta função de
+     novo assim que a textarea existir. */
   function ativarCodeMirror(modulosCarregados) {
     modulos = modulosCarregados;
+    if (!area) return;
     valorPendente = area.value;
     area.hidden = true;
     criarVista();

@@ -139,24 +139,48 @@
   <script src="assets/js/editor.js"></script>
   <script src="assets/js/script.js"></script>
 
-  <!-- CodeMirror 6 vem do CDN. Se não carregar (sem internet), a textarea
-       continua servindo como editor e a correção segue funcionando. -->
+  <!-- O CodeMirror vem de assets/vendor/codemirror.min.js: um arquivo só,
+       servido pelo mesmo servidor que entrega o resto do site.
+
+       Antes eram três imports do esm.sh, que se desdobravam em 53 pedidos a um
+       CDN de terceiros. Como Promise.all rejeita no primeiro erro, bastava um
+       daqueles 53 falhar para o editor inteiro virar textarea — o que, na
+       hospedagem, acontecia na maioria dos carregamentos.
+
+       O CDN continua como reserva por causa do duplo clique no index.html: em
+       file:// o navegador recusa a importação do módulo local por CORS, mas
+       deixa passar a do esm.sh. Se as duas falharem, a textarea assume e a
+       correção segue funcionando. -->
   <script type="module">
-    Promise.all([
-      import('https://esm.sh/codemirror@6.0.1'),
-      import('https://esm.sh/@codemirror/lang-javascript@6.2.2'),
-      import('https://esm.sh/@codemirror/theme-one-dark@6.1.2')
-    ]).then(function (modulos) {
-      Editor.ativarCodeMirror({
-        EditorView: modulos[0].EditorView,
-        basicSetup: modulos[0].basicSetup,
-        javascript: modulos[1].javascript,
-        oneDark: modulos[2].oneDark
+    function pelaRede() {
+      return Promise.all([
+        import('https://esm.sh/codemirror@6.0.1'),
+        import('https://esm.sh/@codemirror/lang-javascript@6.2.2'),
+        import('https://esm.sh/@codemirror/theme-one-dark@6.1.2')
+      ]).then(function (modulos) {
+        return {
+          EditorView: modulos[0].EditorView,
+          basicSetup: modulos[0].basicSetup,
+          javascript: modulos[1].javascript,
+          oneDark: modulos[2].oneDark
+        };
       });
-      App.aoCarregarEditor();
-    }).catch(function () {
-      App.avisarEditorSimples();
-    });
+    }
+
+    import('./assets/vendor/codemirror.min.js')
+      .catch(pelaRede)
+      .then(function (modulos) {
+        Editor.ativarCodeMirror({
+          EditorView: modulos.EditorView,
+          basicSetup: modulos.basicSetup,
+          javascript: modulos.javascript,
+          oneDark: modulos.oneDark
+        });
+        App.aoCarregarEditor();
+      })
+      .catch(function () {
+        App.avisarEditorSimples();
+      });
   </script>
 
 </body>

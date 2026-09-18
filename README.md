@@ -11,7 +11,7 @@ Site para treinar lógica de programação resolvendo questões de JavaScript no
 | | |
 |---|---|
 | **100 questões** | divididas em quatro níveis: Fácil, Médio, Difícil e Nível Deus |
-| **Editor de código** | CodeMirror com destaque de sintaxe, e `textarea` como reserva se ele não carregar |
+| **Editor de código** | CodeMirror com destaque de sintaxe, servido junto com o site, e `textarea` como reserva se ele não carregar |
 | **Correção automática** | a resposta roda de verdade contra os testes da questão e devolve acerto ou erro |
 | **Sem entregar a resposta** | o erro nunca mostra o gabarito — o catálogo enviado ao navegador não contém testes, dica nem solução |
 | **Limite de 2 segundos** | laço infinito é interrompido com aviso, em vez de travar a página |

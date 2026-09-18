@@ -37,12 +37,17 @@ repositório `solving_questions`.
 |---|---|
 | Language / Runtime | `Node` |
 | Branch | `main` |
-| Build Command | `npm install` |
+| Build Command | `npm install --omit=dev` |
 | Start Command | `npm start` |
 | Instance Type | `Free` |
 
 > Os nomes dos campos mudam de tempos em tempos. O que importa é: runtime Node,
 > branch `main`, start `npm start`, plano gratuito.
+
+O `--omit=dev` não é obrigatório — só evita instalar no servidor o esbuild e o
+CodeMirror, que servem para gerar `assets/vendor/codemirror.min.js` e não fazem
+falta em produção, já que esse arquivo é versionado pronto. Sem o `--omit=dev`
+o deploy funciona igual, só demora um pouco mais.
 
 ### 4. Configure a variável de ambiente
 

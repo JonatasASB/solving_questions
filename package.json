@@ -5,10 +5,17 @@
   "description": "Site para treinar logica de programacao resolvendo questoes de JavaScript no navegador.",
   "main": "servidor/servidor.js",
   "scripts": {
-    "start": "node servidor/servidor.js"
+    "start": "node servidor/servidor.js",
+    "build:editor": "esbuild assets/vendor/entrada.js --bundle --format=esm --minify --target=es2020 --outfile=assets/vendor/codemirror.min.js"
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@codemirror/lang-javascript": "6.2.2",
+    "@codemirror/theme-one-dark": "6.1.2",
+    "codemirror": "6.0.1",
+    "esbuild": "^0.25.0"
   },
   "license": "MIT"
 }
