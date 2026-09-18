@@ -12,7 +12,12 @@
     formulario: document.getElementById('formulario'),
     email: document.getElementById('email'),
     senha: document.getElementById('senha'),
+    confirmar: document.getElementById('confirmar'),
+    campoConfirmar: document.getElementById('campo-confirmar'),
     ajudaSenha: document.getElementById('ajuda-senha'),
+    ajudaConfirmar: document.getElementById('ajuda-confirmar'),
+    olhos: document.querySelectorAll('[data-olho]'),
+    olhoConfirmar: document.querySelector('[data-olho="confirmar"]'),
     blocoPerfil: document.getElementById('bloco-perfil'),
     camposPerfil: document.getElementById('campos-perfil'),
     mensagem: document.getElementById('mensagem'),
@@ -67,6 +72,47 @@
     atualizarModo();
   }
 
+  /* ------------------------------------------------------- Ver a senha */
+
+  /* Além de trocar o tipo do campo, o botão reescreve o próprio
+     data-i18n-attr: assim uma troca de idioma traduz o rótulo do estado em
+     que ele está, e não sempre o de "mostrar". */
+  function alternarOlho(botao) {
+    const campo = document.getElementById(botao.dataset.olho);
+    const mostrando = botao.getAttribute('aria-pressed') !== 'true';
+    const chave = mostrando ? 'ocultar_senha' : 'mostrar_senha';
+
+    campo.type = mostrando ? 'text' : 'password';
+    botao.setAttribute('aria-pressed', String(mostrando));
+    botao.setAttribute('data-i18n-attr', 'aria-label:' + chave + ',title:' + chave);
+    botao.setAttribute('aria-label', I18n.t(chave));
+    botao.setAttribute('title', I18n.t(chave));
+
+    /* O foco volta para onde a pessoa estava digitando, no fim do texto. */
+    const fim = campo.value.length;
+    campo.focus();
+    campo.setSelectionRange(fim, fim);
+  }
+
+  function esconderSenha(botao) {
+    if (botao.getAttribute('aria-pressed') === 'true') alternarOlho(botao);
+  }
+
+  /* ---------------------------------------------------- Senha repetida */
+
+  function senhasConferem() {
+    return el.senha.value === el.confirmar.value;
+  }
+
+  /* Só reclama depois que a segunda senha começa a existir: enquanto ela
+     está pela metade, "diferente" seria o estado normal e o aviso só
+     atrapalharia. */
+  function conferirConfirmacao() {
+    el.ajudaConfirmar.hidden = modo !== 'cadastrar' ||
+      el.confirmar.value.length === 0 ||
+      senhasConferem();
+  }
+
   /* ------------------------------------------------------------- Modo */
 
   function atualizarModo() {
@@ -81,7 +127,18 @@
     el.btnEnviar.textContent = I18n.t(cadastrando ? 'criar_conta' : 'entrar');
     el.senha.setAttribute('autocomplete', cadastrando ? 'new-password' : 'current-password');
     el.ajudaSenha.hidden = !cadastrando;
+    el.campoConfirmar.hidden = !cadastrando;
     el.blocoPerfil.hidden = !cadastrando;
+    el.confirmar.required = cadastrando;
+
+    /* Voltando para "Entrar", a segunda senha não tem mais sentido. Limpar
+       aqui evita que ela reapareça preenchida — e trocar de idioma também
+       passa por esta função, por isso a limpeza só vale fora do cadastro. */
+    if (!cadastrando) {
+      el.confirmar.value = '';
+      esconderSenha(el.olhoConfirmar);
+    }
+    conferirConfirmacao();
 
     if (cadastrando) {
       // Preserva o que já estava digitado ao trocar de idioma.
@@ -143,6 +200,12 @@
         el.senha.focus();
         return;
       }
+      if (!senhasConferem()) {
+        mostrarErro(I18n.t('erro_senhas_diferentes'));
+        conferirConfirmacao();
+        el.confirmar.focus();
+        return;
+      }
       perfil = Perfil.ler(el.camposPerfil);
       const problema = Perfil.conferir(perfil);
       if (problema) {
@@ -195,13 +258,27 @@
       Auth.escolherVisitante();
     });
     el.email.addEventListener('input', esconderMensagem);
-    el.senha.addEventListener('input', esconderMensagem);
+
+    /* Digitar em qualquer uma das duas senhas refaz a comparação, para o
+       aviso sumir assim que elas voltam a ser iguais. */
+    [el.senha, el.confirmar].forEach(function (campo) {
+      campo.addEventListener('input', function () {
+        esconderMensagem();
+        conferirConfirmacao();
+      });
+    });
+
+    el.olhos.forEach(function (botao) {
+      botao.addEventListener('click', function () { alternarOlho(botao); });
+    });
 
     if (!Auth.apiDisponivel()) {
       el.avisoSemServidor.hidden = false;
       el.btnEnviar.disabled = true;
       el.email.disabled = true;
       el.senha.disabled = true;
+      el.confirmar.disabled = true;
+      el.olhos.forEach(function (botao) { botao.disabled = true; });
       return;
     }
 

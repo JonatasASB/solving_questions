@@ -45,16 +45,50 @@
                  data-i18n-attr="placeholder:email_exemplo">
         </label>
 
-        <label class="campo">
-          <span class="campo__rotulo" data-i18n="senha">Senha</span>
-          <input type="password" id="senha" name="senha" required
-                 autocomplete="current-password"
-                 data-i18n-attr="placeholder:senha_exemplo">
-        </label>
+        <!-- O rótulo é um <label for>, e não um <span> dentro do label,
+             porque agora existe um botão ao lado do campo: dentro do label,
+             o clique no botão também valeria como clique no campo. -->
+        <div class="campo">
+          <label class="campo__rotulo" for="senha" data-i18n="senha">Senha</label>
+          <div class="campo__senha">
+            <input type="password" id="senha" name="senha" required
+                   autocomplete="current-password"
+                   data-i18n-attr="placeholder:senha_exemplo">
+            <button type="button" class="olho" data-olho="senha" aria-pressed="false"
+                    data-i18n-attr="aria-label:mostrar_senha,title:mostrar_senha">
+              <svg class="olho__icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M2 12s3.7-6.5 10-6.5S22 12 22 12s-3.7 6.5-10 6.5S2 12 2 12Z"/>
+                <circle cx="12" cy="12" r="2.9"/>
+                <path class="olho__corte" d="M3.8 3.4 20.2 20.6"/>
+              </svg>
+            </button>
+          </div>
+        </div>
 
         <p class="campo__ajuda" id="ajuda-senha" data-i18n="ajuda_senha" hidden>
           A senha precisa ter pelo menos 8 caracteres.
         </p>
+
+        <!-- Só aparece ao criar conta. Um erro de digitação na senha só
+             apareceria na entrada seguinte, quando já não dá para corrigir. -->
+        <div class="campo" id="campo-confirmar" hidden>
+          <label class="campo__rotulo" for="confirmar" data-i18n="confirmar_senha">Confirmar senha</label>
+          <div class="campo__senha">
+            <input type="password" id="confirmar" name="confirmar"
+                   autocomplete="new-password"
+                   data-i18n-attr="placeholder:confirmar_senha_exemplo">
+            <button type="button" class="olho" data-olho="confirmar" aria-pressed="false"
+                    data-i18n-attr="aria-label:mostrar_senha,title:mostrar_senha">
+              <svg class="olho__icone" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M2 12s3.7-6.5 10-6.5S22 12 22 12s-3.7 6.5-10 6.5S2 12 2 12Z"/>
+                <circle cx="12" cy="12" r="2.9"/>
+                <path class="olho__corte" d="M3.8 3.4 20.2 20.6"/>
+              </svg>
+            </button>
+          </div>
+          <span class="campo__ajuda campo__ajuda--erro" id="ajuda-confirmar"
+                data-i18n="erro_senhas_diferentes" role="alert" hidden>As senhas não são iguais.</span>
+        </div>
 
         <!-- Só aparece ao criar conta -->
         <div id="bloco-perfil" hidden>

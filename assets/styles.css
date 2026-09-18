@@ -697,6 +697,68 @@ code {
   color: var(--texto-suave);
 }
 
+/* Sem a margem negativa do aviso comum: encostado no campo, o texto
+   vermelho cairia em cima do contorno de foco. */
+.campo__ajuda--erro {
+  color: var(--erro);
+  margin-top: 0;
+}
+
+/* -------------------------------------------------------- Campo de senha */
+
+/* O olho fica por cima do campo, então o texto digitado precisa parar antes
+   dele — senão a senha passa por baixo do botão. */
+.campo__senha { position: relative; display: flex; }
+
+.campo__senha input { padding-right: 2.7rem; }
+
+.olho {
+  position: absolute;
+  right: 0.3rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--texto-suave);
+  cursor: pointer;
+  transition: color var(--transicao), background var(--transicao);
+}
+
+.olho:hover { color: var(--texto); background: var(--superficie-2); }
+
+.olho:focus-visible {
+  outline: 2px solid var(--destaque-forte);
+  outline-offset: 1px;
+}
+
+.olho[aria-pressed="true"] { color: var(--destaque-forte); }
+
+.olho:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.olho__icone {
+  width: 18px;
+  height: 18px;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* O corte sobre o olho só aparece com a senha visível: o ícone passa a
+   dizer "esconder" sem precisar de dois SVGs. */
+.olho__corte { opacity: 0; transition: opacity var(--transicao); }
+
+.olho[aria-pressed="true"] .olho__corte { opacity: 1; }
+
 .botao--largo {
   width: 100%;
   padding: 0.65rem 1rem;
