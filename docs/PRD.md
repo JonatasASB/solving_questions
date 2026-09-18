@@ -433,7 +433,8 @@ idiomas.
 | **Servidor em Node puro**, sem dependências | Usa só `http`, `crypto` e `fs`. Dispensa `npm install`, que é onde projetos de estudo costumam travar no Windows. |
 | **`crypto.scrypt`** para a senha | Função de derivação feita para senha: lenta de propósito e com sal por usuário. |
 | **Token assinado com HMAC-SHA256** | Sem sessão em memória: o servidor valida pela assinatura e reiniciar não desloga ninguém. |
-| **Arquivo JSON** no lugar de banco | Suficiente para a escala atual, e isolado em `banco.js` — trocar por um banco de verdade não afeta o resto. |
+| **Postgres na hospedagem, arquivo JSON na máquina local** | O disco do contêiner volta ao estado do build a cada reinício, e o plano gratuito reinicia sempre: conta guardada em arquivo lá dura uma sessão. Os dois destinos vivem atrás da mesma API em `banco.js`, que era justamente o ponto de isolá-lo. Na própria máquina o arquivo continua valendo — não há nada a configurar. |
+| **Postgres pela API REST, com `fetch`** | Um driver de banco seria a primeira dependência de execução do projeto. Falando HTTP, o servidor continua rodando só com o que vem no Node. |
 | **Lista de permissão** nos arquivos servidos | Só `index.html`, `login.html` e `assets/` saem pela rede; `servidor/dados/` fica inalcançável por padrão. |
 | **Sandbox em processo separado** com `--permission` | Executar código de terceiros é a parte perigosa do projeto. Processo separado dá o limite de tempo; o modelo de permissões fecha arquivos, subprocessos e `process.binding`. |
 | **Fila de 4 correções simultâneas** | Sem ela, muitos envios ao mesmo tempo abririam processos sem limite. |
@@ -480,7 +481,8 @@ solving_questions/
 │   ├── sandbox.js          onde o código do usuário roda
 │   ├── auth.js             scrypt e HMAC
 │   ├── banco.js            usuários
-│   └── dados/              criado ao rodar — no .gitignore
+│   └── dados/              criado ao rodar — no .gitignore, e só usado
+│                           quando não há Postgres configurado
 └── docs/
     ├── dump.md             ideia original (não editar)
     └── PRD.md              este documento

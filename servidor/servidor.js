@@ -143,7 +143,7 @@ async function cadastrar(req, res) {
   if (String(senha).length > 200) {
     return responderErro(res, 400, 'senha_longa', 'A senha é longa demais.');
   }
-  if (banco.buscarPorEmail(email)) {
+  if (await banco.buscarPorEmail(email)) {
     return responderErro(res, 409, 'email_em_uso', 'Já existe uma conta com este e-mail.');
   }
 
@@ -151,11 +151,11 @@ async function cadastrar(req, res) {
   if (conferido.erro) {
     return responderErro(res, 400, conferido.erro, 'Confira os dados do perfil.');
   }
-  if (banco.buscarPorUsername(conferido.perfil.username)) {
+  if (await banco.buscarPorUsername(conferido.perfil.username)) {
     return responderErro(res, 409, 'username_em_uso', 'Este nome de usuário já está em uso.');
   }
 
-  const usuario = banco.criar(email, auth.guardarSenha(senha), conferido.perfil);
+  const usuario = await banco.criar(email, auth.guardarSenha(senha), conferido.perfil);
   responderJson(res, 201, {
     token: auth.gerarToken(usuario),
     email: usuario.email,
@@ -168,11 +168,11 @@ function idsDeLinguagem() {
   return questoes.LINGUAGENS.map(function (l) { return l.id; });
 }
 
-function lerPerfil(req, res) {
+async function lerPerfil(req, res) {
   const dono = usuarioDaRequisicao(req, res);
   if (!dono) return responderErro(res, 401, 'sem_sessao', 'Faça login novamente.');
 
-  const usuario = banco.buscarPorId(dono.id);
+  const usuario = await banco.buscarPorId(dono.id);
   if (!usuario) return responderErro(res, 404, 'conta_sumiu', 'Conta não encontrada.');
 
   // Conta criada antes do perfil existir devolve null; a tela pede para completar.
@@ -190,12 +190,12 @@ async function gravarPerfil(req, res) {
   }
 
   // O username é único, mas o dono pode manter o próprio sem conflito.
-  const jaUsado = banco.buscarPorUsername(conferido.perfil.username);
+  const jaUsado = await banco.buscarPorUsername(conferido.perfil.username);
   if (jaUsado && jaUsado.id !== dono.id) {
     return responderErro(res, 409, 'username_em_uso', 'Este nome de usuário já está em uso.');
   }
 
-  const salvo = banco.atualizarPerfil(dono.id, conferido.perfil);
+  const salvo = await banco.atualizarPerfil(dono.id, conferido.perfil);
   if (!salvo) return responderErro(res, 404, 'conta_sumiu', 'Conta não encontrada.');
 
   responderJson(res, 200, { perfil: salvo });
@@ -211,7 +211,7 @@ async function entrar(req, res) {
       'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.');
   }
 
-  const usuario = banco.buscarPorEmail(email);
+  const usuario = await banco.buscarPorEmail(email);
 
   /* A mesma mensagem para e-mail inexistente e senha errada: dizer qual dos
      dois falhou entregaria a quem está tentando adivinhar a informação de
@@ -308,7 +308,7 @@ async function corrigirQuestao(req, res) {
     resposta.pontosDaQuestao = questoes.pontosDoNivel(questao.nivel);
 
     if (quem.tipo === 'usuario') {
-      const progresso = banco.registrarAcerto(quem.id, questao.id, questoes.pontosDe);
+      const progresso = await banco.registrarAcerto(quem.id, questao.id, questoes.pontosDe);
       if (progresso) {
         resposta.progresso = { pontos: progresso.pontos, resolvidas: progresso.resolvidas };
         resposta.inedita = progresso.inedita;
@@ -322,11 +322,11 @@ async function corrigirQuestao(req, res) {
   responderJson(res, 200, resposta);
 }
 
-function lerProgresso(req, res) {
+async function lerProgresso(req, res) {
   const dono = usuarioDaRequisicao(req, res);
   if (!dono) return responderJson(res, 401, { erro: 'Faça login novamente.' });
 
-  const usuario = banco.buscarPorId(dono.id);
+  const usuario = await banco.buscarPorId(dono.id);
   if (!usuario) return responderJson(res, 404, { erro: 'Conta não encontrada.' });
 
   responderJson(res, 200, { email: usuario.email, progresso: usuario.progresso });
@@ -454,6 +454,24 @@ servidor.listen(PORTA, async function () {
   console.log(local
     ? 'Resolução de Questões rodando em http://localhost:' + PORTA
     : 'Resolução de Questões no ar na porta ' + PORTA);
+
+  /* Onde as contas estão sendo guardadas, dito na subida. Conta que some é
+     sintoma difícil de ler depois do fato: quem vê "arquivo local" numa
+     hospedagem já sabe, ali, que elas não vão sobreviver ao próximo reinício. */
+  const armazenamento = await banco.conferir();
+  if (armazenamento.destino === 'postgres' && armazenamento.ok) {
+    console.log('Contas no Postgres: ' + armazenamento.detalhe);
+  } else if (armazenamento.destino === 'postgres') {
+    console.error('ERRO: o banco configurado não respondeu — ' + armazenamento.detalhe);
+    console.error('Enquanto isso, cadastro e login vão falhar. Confira SUPABASE_URL e SUPABASE_CHAVE.');
+  } else {
+    console.log('Contas em arquivo local: ' + armazenamento.detalhe);
+    if (armazenamento.aviso) console.warn('AVISO: ' + armazenamento.aviso);
+    if (!local) {
+      console.warn('AVISO: sem SUPABASE_URL e SUPABASE_CHAVE, as contas ficam no disco do');
+      console.warn('contêiner e somem a cada reinício. docs/deploy.md explica como ligar o banco.');
+    }
+  }
 
   const isolamento = await executor.conferirIsolamento();
   if (isolamento.isolado) {

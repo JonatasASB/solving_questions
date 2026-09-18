@@ -17,3 +17,11 @@ services:
         generateValue: true
       - key: NODE_VERSION
         value: "22"
+      # Onde as contas ficam. Sem estas duas, o servidor cai no arquivo local —
+      # que o Render apaga a cada reinício. sync: false quer dizer "pergunte no
+      # painel": os valores não entram no repositório, e a chave de serviço do
+      # Supabase dá acesso total à tabela.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_CHAVE
+        sync: false
